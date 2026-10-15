@@ -28,7 +28,8 @@ class ShareControllerIT extends FacadeIT {
         .andExpect(view().name("share-index"))
         .andExpect(model().attributeExists("shareForm"))
         .andExpect(model().attribute("hasResult", false))
-        .andExpect(content().string(containsString("Equitable Expense Sharing")));
+        .andExpect(content().string(containsString("Equitable Share")))
+        .andExpect(content().string(containsString("Zero Friction")));
   }
 
   @Test
@@ -48,8 +49,8 @@ class ShareControllerIT extends FacadeIT {
         .andExpect(view().name("share-index"))
         .andExpect(model().attribute("hasResult", true))
         .andExpect(model().attributeExists("result"))
-        .andExpect(content().string(containsString("Settlement Summary")))
-        .andExpect(content().string(containsString("Minimal Settlement Plan")));
+        .andExpect(content().string(containsString("Settlement Breakdown")))
+        .andExpect(content().string(containsString("Recommended Direct Settlements")));
   }
 
   @Test

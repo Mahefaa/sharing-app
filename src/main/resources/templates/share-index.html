@@ -3,230 +3,278 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Equitable Share App - Smart Debt Settlement</title>
+    <title>Equitable Share &bull; Smart Expense Splitting &amp; Debt Settlement</title>
     <link rel="stylesheet" th:href="@{/css/style.css}" href="/css/style.css">
 </head>
 <body>
 <nav class="navbar">
     <div class="nav-container">
-        <a th:href="@{/}" class="nav-brand">⚖️ Equitable Share</a>
+        <a th:href="@{/}" class="nav-brand">
+            <span class="brand-icon">⚖️</span>
+            Equitable Share
+        </a>
         <div class="nav-links">
             <a th:href="@{/}" class="nav-link active">Calculator</a>
-            <a th:href="@{/demo}" class="nav-link">⚡ Demo Scenario</a>
+            <a th:href="@{/demo}" class="nav-link">⚡ Trip Demo</a>
             <a th:href="@{/test}" class="nav-link">Canary Diagnostics</a>
-            <a th:href="@{/ping}" class="nav-link">Health Ping</a>
+            <a th:href="@{/ping}" class="nav-link">Ping</a>
         </div>
     </div>
 </nav>
 
 <main class="main-content">
-    <div class="hero">
-        <h1 class="hero-title">Equitable Expense Sharing</h1>
+    <!-- Hero Header -->
+    <header class="hero">
+        <div class="tag-pill">✨ Stateless &bull; Zero Storage &bull; Greedy Settle</div>
+        <h1 class="hero-title">Fair Split, <span>Zero Friction.</span></h1>
         <p class="hero-subtitle">
-            Stateless, zero-storage fair bill splitting and greedy debt settlement algorithm.
-            Minimize repayment transactions effortlessly.
+            Split group expenses equitably and minimize repayment transfers with a greedy debt settlement algorithm.
         </p>
-        <div class="quick-actions">
-            <a th:href="@{/demo}" class="btn btn-secondary">⚡ Run Trip Demo Scenario</a>
-            <a th:href="@{/share}" class="btn btn-outline">🔄 Clear &amp; Reset</a>
+        <div class="preset-pills">
+            <a th:href="@{/demo}" class="btn btn-secondary">⚡ Load Trip Demo</a>
+            <a th:href="@{/share}" class="btn btn-outline">🔄 Reset Form</a>
         </div>
-    </div>
+    </header>
 
     <!-- Error Alert -->
-    <div th:if="${errorMessage}" class="alert alert-error">
-        <strong>⚠️ Calculation Notice:</strong>
-        <span th:text="${errorMessage}">Error occurred</span>
+    <div th:if="${errorMessage}" class="alert-banner">
+        <span>⚠️</span>
+        <span th:text="${errorMessage}">Validation Error occurred</span>
     </div>
 
-    <!-- Results Section (when computed) -->
-    <section th:if="${hasResult}" class="results-section">
-        <div class="card results-card">
-            <h2 class="section-title">📊 Settlement Summary</h2>
-            <div class="metrics-grid">
-                <div class="metric-box">
-                    <span class="metric-label">Total Expenses</span>
-                    <span class="metric-value" th:text="${result.totalExpenses + ' €'}">0.00 €</span>
-                </div>
-                <div class="metric-box">
-                    <span class="metric-label">Participants</span>
-                    <span class="metric-value" th:text="${result.participantCount}">0</span>
-                </div>
-                <div class="metric-box">
-                    <span class="metric-label">Transactions Needed</span>
-                    <span class="metric-value highlight" th:text="${result.settlements.size()}">0</span>
-                </div>
-            </div>
-
-            <!-- Simplified Settlement Transactions -->
-            <h3 class="subsection-title">🤝 Minimal Settlement Plan</h3>
-            <div th:if="${#lists.isEmpty(result.settlements)}" class="empty-state">
-                🎉 All accounts are balanced! No settlement transactions required.
-            </div>
-            <div th:unless="${#lists.isEmpty(result.settlements)}" class="settlements-grid">
-                <div th:each="s : ${result.settlements}" class="settlement-card">
-                    <div class="settlement-parties">
-                        <span class="party debtor" th:text="${s.debtor}">Alice</span>
-                        <span class="arrow">&rarr; pays &rarr;</span>
-                        <span class="party creditor" th:text="${s.creditor}">Bob</span>
-                    </div>
-                    <div class="settlement-amount" th:text="${s.amount + ' €'}">25.00 €</div>
-                </div>
-            </div>
-
-            <!-- Balances Table -->
-            <h3 class="subsection-title" style="margin-top: 2rem;">👤 Participant Balances</h3>
-            <div class="table-responsive">
-                <table class="data-table">
-                    <thead>
-                    <tr>
-                        <th>Participant</th>
-                        <th>Total Paid</th>
-                        <th>Fair Share</th>
-                        <th>Net Balance</th>
-                        <th>Status</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr th:each="b : ${result.balances}">
-                        <td class="font-bold" th:text="${b.participant}">Name</td>
-                        <td th:text="${b.totalPaid + ' €'}">0.00 €</td>
-                        <td th:text="${b.totalShare + ' €'}">0.00 €</td>
-                        <td class="font-bold"
-                            th:classappend="${b.isCreditor()} ? 'text-success' : (${b.isDebtor()} ? 'text-danger' : 'text-muted')"
-                            th:text="${(b.isCreditor() ? '+' : '') + b.netBalance + ' €'}">+0.00 €</td>
-                        <td>
-                            <span th:if="${b.isCreditor()}" class="badge badge-success">Receives</span>
-                            <span th:if="${b.isDebtor()}" class="badge badge-danger">Owes</span>
-                            <span th:if="${b.isSettled()}" class="badge badge-muted">Settled</span>
-                        </td>
-                    </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Audit Trail -->
-            <details class="audit-details">
-                <summary>🔍 Audit Logs &amp; Split Breakdown</summary>
-                <ul class="audit-list">
-                    <li th:each="log : ${result.auditLogs}" th:text="${log}">Log line</li>
-                </ul>
-            </details>
+    <!-- Calculated Results Section -->
+    <section th:if="${hasResult}" class="card results-card">
+        <div class="card-header-bar">
+            <h2 class="card-title">📊 Settlement Breakdown</h2>
+            <span class="status-pill receives">Calculation Complete</span>
         </div>
+
+        <!-- Key Metrics -->
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-icon blue">💳</div>
+                <div class="metric-info">
+                    <span class="metric-label">Total Expenses</span>
+                    <span class="metric-number" th:text="${result.totalExpenses + ' €'}">0.00 €</span>
+                </div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-icon indigo">👥</div>
+                <div class="metric-info">
+                    <span class="metric-label">Participants</span>
+                    <span class="metric-number" th:text="${result.participantCount}">0</span>
+                </div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-icon green">🔁</div>
+                <div class="metric-info">
+                    <span class="metric-label">Payments Needed</span>
+                    <span class="metric-number" th:text="${result.settlements.size()}">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Minimal Settlement Transfers -->
+        <h3 class="subsection-heading">🤝 Recommended Direct Settlements</h3>
+        <div th:if="${#lists.isEmpty(result.settlements)}" class="alert-banner" style="background: var(--success-bg); border-color: var(--success-border); color: var(--success);">
+            🎉 All accounts are balanced! No repayment transactions needed.
+        </div>
+        <div th:unless="${#lists.isEmpty(result.settlements)}" class="settlements-grid">
+            <div th:each="s : ${result.settlements}" class="settlement-card">
+                <div class="settlement-flow">
+                    <div class="avatar-circle debtor" th:text="${#strings.substring(s.debtor, 0, 1)}">A</div>
+                    <div class="flow-meta">
+                        <span class="flow-name" th:text="${s.debtor}">Alice</span>
+                        <span class="flow-arrow-text">&rarr; pays &rarr;</span>
+                    </div>
+                    <div class="avatar-circle creditor" th:text="${#strings.substring(s.creditor, 0, 1)}">B</div>
+                    <div class="flow-meta">
+                        <span class="flow-name" th:text="${s.creditor}">Bob</span>
+                        <span class="flow-arrow-text">recipient</span>
+                    </div>
+                </div>
+                <div class="settlement-amount-badge" th:text="${s.amount + ' €'}">25.00 €</div>
+            </div>
+        </div>
+
+        <!-- Individual Balances Table -->
+        <h3 class="subsection-heading">👤 Individual Net Balances</h3>
+        <div class="table-wrapper">
+            <table class="styled-table">
+                <thead>
+                <tr>
+                    <th>Participant</th>
+                    <th>Total Paid</th>
+                    <th>Fair Share</th>
+                    <th>Net Balance</th>
+                    <th>Status</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="b : ${result.balances}">
+                    <td>
+                        <div class="user-cell">
+                            <div class="avatar-circle"
+                                 th:classappend="${b.isCreditor()} ? 'creditor' : (${b.isDebtor()} ? 'debtor' : '')"
+                                 th:text="${#strings.substring(b.participant, 0, 1)}">U</div>
+                            <span th:text="${b.participant}">Name</span>
+                        </div>
+                    </td>
+                    <td th:text="${b.totalPaid + ' €'}">0.00 €</td>
+                    <td th:text="${b.totalShare + ' €'}">0.00 €</td>
+                    <td style="font-weight: 800; font-size: 1.05rem;"
+                        th:classappend="${b.isCreditor()} ? 'text-success' : (${b.isDebtor()} ? 'text-danger' : 'text-muted')"
+                        th:text="${(b.isCreditor() ? '+' : '') + b.netBalance + ' €'}">+0.00 €</td>
+                    <td>
+                        <span th:if="${b.isCreditor()}" class="status-pill receives">Receives</span>
+                        <span th:if="${b.isDebtor()}" class="status-pill owes">Owes</span>
+                        <span th:if="${b.isSettled()}" class="status-pill settled">Settled</span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Audit Trail -->
+        <details class="audit-accordion">
+            <summary>🔍 View Mathematical Audit Log &amp; Split Breakdown</summary>
+            <div class="audit-content">
+                <ul>
+                    <li th:each="log : ${result.auditLogs}" th:text="${log}">Audit line</li>
+                </ul>
+            </div>
+        </details>
     </section>
 
     <!-- Calculation Input Form -->
-    <section class="form-section">
-        <form th:action="@{/calculate}" method="post" th:object="${shareForm}" class="card form-card">
-            <h2 class="section-title">✏️ Define Participants &amp; Expenses</h2>
+    <section class="card form-card">
+        <div class="card-header-bar">
+            <h2 class="card-title">✏️ Group &amp; Expenses Setup</h2>
+            <span class="form-hint">Stateless calculation</span>
+        </div>
 
-            <!-- Participants -->
+        <form th:action="@{/calculate}" method="post" th:object="${shareForm}">
+            <!-- Participants Input -->
             <div class="form-group">
-                <label for="participantsInput" class="form-label">
-                    Participants <span class="text-muted">(comma-separated)</span>
-                </label>
+                <label for="participantsInput" class="form-label">Group Members</label>
                 <input type="text"
                        id="participantsInput"
                        th:field="*{participantsInput}"
-                       class="form-control"
+                       class="form-input"
                        placeholder="Alice, Bob, Charlie, David"
                        required>
-                <small class="form-help">Enter all group member names separated by commas.</small>
+                <p class="form-hint">Separate member names by commas (e.g. Alice, Bob, Charlie, David).</p>
             </div>
 
-            <!-- Expenses -->
+            <!-- Expense List -->
             <div class="form-group">
-                <div class="flex-between">
-                    <label class="form-label">Expenses</label>
-                    <button type="button" class="btn btn-small btn-secondary" onclick="addExpenseRow()">+ Add Expense</button>
-                </div>
-                <div class="expenses-container" id="expensesContainer">
-                    <div th:each="expense, itemStat : *{expenses}" class="expense-row" th:id="'expense-row-' + ${itemStat.index}">
-                        <div class="expense-field">
-                            <label class="sub-label">Description</label>
-                            <input type="text"
-                                   th:field="*{expenses[__${itemStat.index}__].description}"
-                                   class="form-control"
-                                   placeholder="e.g. Dinner, Hotel, Taxi">
+                <label class="form-label">Expenses List</label>
+                <div class="expense-cards-list" id="expenseCardsList">
+                    <div th:each="expense, itemStat : *{expenses}" class="expense-card-item" th:id="'expense-row-' + ${itemStat.index}">
+                        <div class="expense-top-row">
+                            <div class="input-field-wrap">
+                                <span class="field-label">Expense Description</span>
+                                <input type="text"
+                                       th:field="*{expenses[__${itemStat.index}__].description}"
+                                       class="form-input"
+                                       placeholder="e.g. Airbnb Villa, Groceries, Dinner">
+                            </div>
+                            <div class="input-field-wrap">
+                                <span class="field-label">Amount (€)</span>
+                                <input type="number"
+                                       step="0.01"
+                                       min="0.01"
+                                       th:field="*{expenses[__${itemStat.index}__].amount}"
+                                       class="form-input"
+                                       placeholder="0.00"
+                                       style="font-weight: 700;">
+                            </div>
+                            <button type="button" class="btn-delete-row" title="Remove Expense" onclick="removeExpenseRow(this)">✕</button>
                         </div>
-                        <div class="expense-field">
-                            <label class="sub-label">Paid By</label>
-                            <input type="text"
-                                   th:field="*{expenses[__${itemStat.index}__].paidBy}"
-                                   class="form-control"
-                                   placeholder="Alice">
-                        </div>
-                        <div class="expense-field">
-                            <label class="sub-label">Amount (€)</label>
-                            <input type="number"
-                                   step="0.01"
-                                   min="0.01"
-                                   th:field="*{expenses[__${itemStat.index}__].amount}"
-                                   class="form-control"
-                                   placeholder="50.00">
-                        </div>
-                        <div class="expense-field">
-                            <label class="sub-label">Split Method</label>
-                            <select th:field="*{expenses[__${itemStat.index}__].splitType}" class="form-control">
-                                <option value="EQUAL">EQUAL</option>
-                            </select>
-                        </div>
-                        <div class="expense-field shared-field">
-                            <label class="sub-label">Shared With <span class="text-muted">(blank = all)</span></label>
-                            <input type="text"
-                                   th:field="*{expenses[__${itemStat.index}__].sharedWithInput}"
-                                   class="form-control"
-                                   placeholder="Leave blank for all">
+                        <div class="expense-bottom-row">
+                            <div class="input-field-wrap">
+                                <span class="field-label">Paid By</span>
+                                <input type="text"
+                                       th:field="*{expenses[__${itemStat.index}__].paidBy}"
+                                       class="form-input"
+                                       placeholder="Payer Name">
+                            </div>
+                            <div class="input-field-wrap">
+                                <span class="field-label">Split Method</span>
+                                <select th:field="*{expenses[__${itemStat.index}__].splitType}" class="form-input">
+                                    <option value="EQUAL">EQUAL</option>
+                                </select>
+                            </div>
+                            <div class="input-field-wrap">
+                                <span class="field-label">Shared With <span class="text-muted">(blank = all members)</span></span>
+                                <input type="text"
+                                       th:field="*{expenses[__${itemStat.index}__].sharedWithInput}"
+                                       class="form-input"
+                                       placeholder="Leave blank for entire group">
+                            </div>
                         </div>
                     </div>
                 </div>
+
+                <button type="button" class="btn-add-dashed" onclick="addExpenseCard()">+ Add Another Expense</button>
             </div>
 
             <!-- Submit Button -->
-            <div class="form-actions">
-                <button type="submit" class="btn btn-primary btn-large">
-                    ⚡ Calculate Fair Settlement
-                </button>
-            </div>
+            <button type="submit" class="btn btn-primary btn-submit-hero">
+                ⚡ Calculate Fair Settlement
+            </button>
         </form>
     </section>
 </main>
 
 <footer class="app-footer">
-    <p>Equitable Share App &bull; Powered by Java 21, Spring Boot 3 &amp; Poja Serverless</p>
+    <p>Equitable Share App &bull; Powered by Java 21, Spring Boot 3 &amp; Serverless AWS Container</p>
 </footer>
 
 <script>
-    function addExpenseRow() {
-        const container = document.getElementById('expensesContainer');
-        const count = container.getElementsByClassName('expense-row').length;
-        const newRow = document.createElement('div');
-        newRow.className = 'expense-row';
-        newRow.id = 'expense-row-' + count;
-        newRow.innerHTML = `
-            <div class="expense-field">
-                <label class="sub-label">Description</label>
-                <input type="text" name="expenses[${count}].description" class="form-control" placeholder="e.g. Activity">
+    function addExpenseCard() {
+        const list = document.getElementById('expenseCardsList');
+        const count = list.getElementsByClassName('expense-card-item').length;
+        const card = document.createElement('div');
+        card.className = 'expense-card-item';
+        card.id = 'expense-row-' + count;
+        card.innerHTML = `
+            <div class="expense-top-row">
+                <div class="input-field-wrap">
+                    <span class="field-label">Expense Description</span>
+                    <input type="text" name="expenses[${count}].description" class="form-input" placeholder="e.g. Dinner, Activity">
+                </div>
+                <div class="input-field-wrap">
+                    <span class="field-label">Amount (€)</span>
+                    <input type="number" step="0.01" min="0.01" name="expenses[${count}].amount" class="form-input" placeholder="0.00" style="font-weight: 700;">
+                </div>
+                <button type="button" class="btn-delete-row" title="Remove Expense" onclick="removeExpenseRow(this)">✕</button>
             </div>
-            <div class="expense-field">
-                <label class="sub-label">Paid By</label>
-                <input type="text" name="expenses[${count}].paidBy" class="form-control" placeholder="Payer">
-            </div>
-            <div class="expense-field">
-                <label class="sub-label">Amount (€)</label>
-                <input type="number" step="0.01" min="0.01" name="expenses[${count}].amount" class="form-control" placeholder="0.00">
-            </div>
-            <div class="expense-field">
-                <label class="sub-label">Split Method</label>
-                <select name="expenses[${count}].splitType" class="form-control">
-                    <option value="EQUAL">EQUAL</option>
-                </select>
-            </div>
-            <div class="expense-field shared-field">
-                <label class="sub-label">Shared With <span class="text-muted">(blank = all)</span></label>
-                <input type="text" name="expenses[${count}].sharedWithInput" class="form-control" placeholder="Leave blank for all">
+            <div class="expense-bottom-row">
+                <div class="input-field-wrap">
+                    <span class="field-label">Paid By</span>
+                    <input type="text" name="expenses[${count}].paidBy" class="form-input" placeholder="Payer Name">
+                </div>
+                <div class="input-field-wrap">
+                    <span class="field-label">Split Method</span>
+                    <select name="expenses[${count}].splitType" class="form-input">
+                        <option value="EQUAL">EQUAL</option>
+                    </select>
+                </div>
+                <div class="input-field-wrap">
+                    <span class="field-label">Shared With <span class="text-muted">(blank = all members)</span></span>
+                    <input type="text" name="expenses[${count}].sharedWithInput" class="form-input" placeholder="Leave blank for entire group">
+                </div>
             </div>
         `;
-        container.appendChild(newRow);
+        list.appendChild(card);
+    }
+
+    function removeExpenseRow(btn) {
+        const item = btn.closest('.expense-card-item');
+        if (item) {
+            item.remove();
+        }
     }
 </script>
 </body>
