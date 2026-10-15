@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canary Diagnostics - Equitable Share App</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" href="/css/style.css">
+</head>
+<body>
+<div class="container">
+    <div class="card">
+        <div class="header">
+            <div>
+                <h1 class="title">Equitable Share App</h1>
+                <p style="color: var(--text-muted); font-size: 0.875rem;">Canary Infrastructure Diagnostic Page</p>
+            </div>
+            <span class="badge">
+                <span class="badge-dot"></span>
+                Operational
+            </span>
+        </div>
+
+        <div class="diagnostics-grid">
+            <div class="diag-item">
+                <div class="diag-label">Active Profile</div>
+                <div class="diag-value" th:text="${activeProfiles}">default</div>
+            </div>
+            <div class="diag-item">
+                <div class="diag-label">Context Path</div>
+                <div class="diag-value" th:text="${contextPath}">/</div>
+            </div>
+            <div class="diag-item">
+                <div class="diag-label">Uptime</div>
+                <div class="diag-value" th:text="${uptime}">0s</div>
+            </div>
+            <div class="diag-item">
+                <div class="diag-label">Java Version</div>
+                <div class="diag-value" th:text="${javaVersion}">21</div>
+            </div>
+            <div class="diag-item" style="grid-column: span 2;">
+                <div class="diag-label">Server Timestamp</div>
+                <div class="diag-value" th:text="${timestamp}">2026-10-15T00:00:00Z</div>
+            </div>
+        </div>
+
+        <div class="footer">
+            Phase 1 Canary Deployment &bull; Environment Discovery &amp; Verification
+        </div>
+    </div>
+</div>
+</body>
+</html>
