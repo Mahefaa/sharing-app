@@ -15,7 +15,7 @@ public class TestController {
 
   private final Environment environment;
 
-  @GetMapping({"/", "/test"})
+  @GetMapping("/test")
   public String testIndex(HttpServletRequest request, Model model) {
     String[] activeProfiles = environment.getActiveProfiles();
     String profiles = activeProfiles.length == 0 ? "default" : String.join(", ", activeProfiles);

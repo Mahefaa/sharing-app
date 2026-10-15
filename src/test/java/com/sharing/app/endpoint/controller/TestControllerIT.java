@@ -32,13 +32,4 @@ class TestControllerIT extends FacadeIT {
         .andExpect(content().string(containsString("Equitable Share App")))
         .andExpect(content().string(containsString("Operational")));
   }
-
-  @Test
-  void can_render_root_endpoint_with_diagnostics() throws Exception {
-    mockMvc
-        .perform(get("/"))
-        .andExpect(status().isOk())
-        .andExpect(view().name("test-index"))
-        .andExpect(model().attributeExists("activeProfiles"));
-  }
 }
