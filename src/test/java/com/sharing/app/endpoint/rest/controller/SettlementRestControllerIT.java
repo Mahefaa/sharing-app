@@ -48,4 +48,46 @@ class SettlementRestControllerIT extends FacadeIT {
         .andExpect(jsonPath("$.settlements.length()").value(2))
         .andExpect(jsonPath("$.balances.length()").value(3));
   }
+
+  @Test
+  void can_upload_file_synchronously_via_rest_api() throws Exception {
+    String jsonContent =
+        """
+        {
+          "participants": [
+            { "name": "ilo", "income": 1666 },
+            { "name": "mahefa", "income": 1345 }
+          ],
+          "expenses": [
+            {
+              "type": "EXPENSE",
+              "description": "loyer",
+              "paidBy": "ilo",
+              "amount": 1000.00,
+              "splitType": "EQUAL"
+            }
+          ]
+        }
+        """;
+
+    org.springframework.mock.web.MockMultipartFile file =
+        new org.springframework.mock.web.MockMultipartFile(
+            "file",
+            "data.json",
+            "application/json",
+            jsonContent.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
+    mockMvc
+        .perform(
+            org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart(
+                    "/api/settlements/upload")
+                .file(file))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.totalExpenses").value(1000.00))
+        .andExpect(jsonPath("$.participantCount").value(2))
+        .andExpect(jsonPath("$.settlements.length()").value(1))
+        .andExpect(jsonPath("$.settlements[0].debtor").value("mahefa"))
+        .andExpect(jsonPath("$.settlements[0].creditor").value("ilo"))
+        .andExpect(jsonPath("$.settlements[0].amount").value(500.00));
+  }
 }

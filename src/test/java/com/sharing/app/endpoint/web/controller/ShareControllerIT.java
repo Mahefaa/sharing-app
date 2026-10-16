@@ -88,4 +88,36 @@ class ShareControllerIT extends FacadeIT {
         .andExpect(model().attributeExists("errorMessage"))
         .andExpect(content().string(containsString("Please provide at least 2 participants")));
   }
+
+  @Test
+  void can_upload_and_process_file_synchronously() throws Exception {
+    String csvContent =
+        """
+        PARTICIPANT,ilo,1666
+        PARTICIPANT,mahefa,1345
+        PARTICIPANT,tanjona,380
+        PARTICIPANT,sanda,200
+        ENTRY,EXPENSE,loyer,ilo,1400,INCOME_PROPORTIONAL,ilo:mahefa:tanjona:sanda
+        ENTRY,EXPENSE,sakafo,mahefa,200,INCOME_PROPORTIONAL,ilo:mahefa:tanjona:sanda
+        ENTRY,SERVICE,Cuisine Sakafo,sanda,120,EQUAL,ilo:mahefa:tanjona:sanda
+        """;
+
+    org.springframework.mock.web.MockMultipartFile file =
+        new org.springframework.mock.web.MockMultipartFile(
+            "file",
+            "scenario.csv",
+            "text/csv",
+            csvContent.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
+    mockMvc
+        .perform(
+            org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart("/upload")
+                .file(file))
+        .andExpect(status().isOk())
+        .andExpect(view().name("share-index"))
+        .andExpect(model().attribute("hasResult", true))
+        .andExpect(model().attributeExists("result"))
+        .andExpect(model().attributeExists("successMessage"))
+        .andExpect(content().string(containsString("processed synchronously")));
+  }
 }

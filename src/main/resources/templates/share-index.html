@@ -15,7 +15,7 @@
         </a>
         <div class="nav-links">
             <a th:href="@{/}" class="nav-link active">Calculator</a>
-            <a th:href="@{/demo}" class="nav-link">⚡ Trip Demo</a>
+            <a th:href="@{/demo}" class="nav-link">⚡ Colocation Demo</a>
             <a th:href="@{/test}" class="nav-link">Canary Diagnostics</a>
             <a th:href="@{/ping}" class="nav-link">Ping</a>
         </div>
@@ -25,22 +25,43 @@
 <main class="main-content">
     <!-- Hero Header -->
     <header class="hero">
-        <div class="tag-pill">✨ Stateless &bull; Zero Storage &bull; Greedy Settle</div>
+        <div class="tag-pill">✨ Stateless &bull; Synchronous File Upload &bull; Service Compensation</div>
         <h1 class="hero-title">Fair Split, <span>Zero Friction.</span></h1>
         <p class="hero-subtitle">
-            Split group expenses equitably and minimize repayment transfers with a greedy debt settlement algorithm.
+            Split rent, meals &amp; group expenses equitably. Compensate monetary payments with services (cooking, cleaning, repairs) or income ratios.
         </p>
         <div class="preset-pills">
-            <a th:href="@{/demo}" class="btn btn-secondary">⚡ Load Trip Demo</a>
+            <a th:href="@{/demo}" class="btn btn-secondary">⚡ Load Colocation Demo (Rent, Food &amp; Services)</a>
             <a th:href="@{/share}" class="btn btn-outline">🔄 Reset Form</a>
         </div>
     </header>
 
-    <!-- Error Alert -->
+    <!-- Success & Error Alerts -->
+    <div th:if="${successMessage}" class="alert-banner" style="background: var(--success-bg); border-color: var(--success-border); color: var(--success);">
+        <span>✅</span>
+        <span th:text="${successMessage}">File uploaded successfully!</span>
+    </div>
     <div th:if="${errorMessage}" class="alert-banner">
         <span>⚠️</span>
         <span th:text="${errorMessage}">Validation Error occurred</span>
     </div>
+
+    <!-- Synchronous File Upload Section -->
+    <section class="card upload-card" style="margin-bottom: 2rem;">
+        <div class="card-header-bar">
+            <h2 class="card-title">📂 Upload Scenario File (CSV or JSON)</h2>
+            <span class="status-pill receives">Synchronous Processing</span>
+        </div>
+        <p class="form-hint" style="margin-bottom: 1.25rem;">
+            Upload your expense and service breakdown file (.csv or .json). The calculation is executed synchronously in-memory and rendered immediately without storage.
+        </p>
+        <form th:action="@{/upload}" method="post" enctype="multipart/form-data" class="upload-form" style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+            <input type="file" name="file" accept=".csv,.json,.txt" class="form-input" style="flex: 1; min-width: 260px;" required>
+            <button type="submit" class="btn btn-primary" style="white-space: nowrap;">
+                ⚡ Upload &amp; Calculate Synchronously
+            </button>
+        </form>
+    </section>
 
     <!-- Calculated Results Section -->
     <section th:if="${hasResult}" class="card results-card">
@@ -54,15 +75,15 @@
             <div class="metric-card">
                 <div class="metric-icon blue">💳</div>
                 <div class="metric-info">
-                    <span class="metric-label">Total Expenses</span>
+                    <span class="metric-label">Total Volume</span>
                     <span class="metric-number" th:text="${result.totalExpenses + ' €'}">0.00 €</span>
                 </div>
             </div>
             <div class="metric-card">
-                <div class="metric-icon indigo">👥</div>
+                <div class="metric-icon indigo">🛠️</div>
                 <div class="metric-info">
-                    <span class="metric-label">Participants</span>
-                    <span class="metric-number" th:text="${result.participantCount}">0</span>
+                    <span class="metric-label">Service Value</span>
+                    <span class="metric-number" th:text="${result.totalServicesValue + ' €'}">0.00 €</span>
                 </div>
             </div>
             <div class="metric-card">
@@ -75,9 +96,9 @@
         </div>
 
         <!-- Minimal Settlement Transfers -->
-        <h3 class="subsection-heading">🤝 Recommended Direct Settlements</h3>
+        <h3 class="subsection-heading">🤝 Recommended Direct Settlements (Cash Transferred)</h3>
         <div th:if="${#lists.isEmpty(result.settlements)}" class="alert-banner" style="background: var(--success-bg); border-color: var(--success-border); color: var(--success);">
-            🎉 All accounts are balanced! No repayment transactions needed.
+            🎉 All accounts are balanced! Services and cash contributions fully offset each other.
         </div>
         <div th:unless="${#lists.isEmpty(result.settlements)}" class="settlements-grid">
             <div th:each="s : ${result.settlements}" class="settlement-card">
@@ -98,13 +119,15 @@
         </div>
 
         <!-- Individual Balances Table -->
-        <h3 class="subsection-heading">👤 Individual Net Balances</h3>
+        <h3 class="subsection-heading">👤 Member Balances (Cash &amp; Service Compensation)</h3>
         <div class="table-wrapper">
             <table class="styled-table">
                 <thead>
                 <tr>
-                    <th>Participant</th>
-                    <th>Total Paid</th>
+                    <th>Member</th>
+                    <th>Cash Paid</th>
+                    <th>Service Provided</th>
+                    <th>Total Credited</th>
                     <th>Fair Share</th>
                     <th>Net Balance</th>
                     <th>Status</th>
@@ -117,10 +140,18 @@
                             <div class="avatar-circle"
                                  th:classappend="${b.isCreditor()} ? 'creditor' : (${b.isDebtor()} ? 'debtor' : '')"
                                  th:text="${#strings.substring(b.participant, 0, 1)}">U</div>
-                            <span th:text="${b.participant}">Name</span>
+                            <div>
+                                <span th:text="${b.participant}">Name</span>
+                                <span th:if="${b.declaredIncome != null}" class="form-hint" style="display:inline; margin-left: 0.35rem;" th:text="'(' + ${b.declaredIncome} + '€/mo)'"></span>
+                            </div>
                         </div>
                     </td>
-                    <td th:text="${b.totalPaid + ' €'}">0.00 €</td>
+                    <td th:text="${b.monetaryPaid + ' €'}">0.00 €</td>
+                    <td>
+                        <span th:if="${b.hasServiceContribution()}" class="status-pill receives" th:text="'+' + ${b.serviceValueProvided} + ' €'">+0.00 €</span>
+                        <span th:unless="${b.hasServiceContribution()}" class="text-muted">0.00 €</span>
+                    </td>
+                    <td class="font-bold" th:text="${b.totalPaid + ' €'}">0.00 €</td>
                     <td th:text="${b.totalShare + ' €'}">0.00 €</td>
                     <td style="font-weight: 800; font-size: 1.05rem;"
                         th:classappend="${b.isCreditor()} ? 'text-success' : (${b.isDebtor()} ? 'text-danger' : 'text-muted')"
@@ -146,10 +177,10 @@
         </details>
     </section>
 
-    <!-- Calculation Input Form -->
+    <!-- Manual Entry Form -->
     <section class="card form-card">
         <div class="card-header-bar">
-            <h2 class="card-title">✏️ Group &amp; Expenses Setup</h2>
+            <h2 class="card-title">✏️ Manual Entry &amp; Adjustment</h2>
             <span class="form-hint">Stateless calculation</span>
         </div>
 
@@ -161,26 +192,26 @@
                        id="participantsInput"
                        th:field="*{participantsInput}"
                        class="form-input"
-                       placeholder="Alice, Bob, Charlie, David"
+                       placeholder="ilo, mahefa, tanjona, sanda"
                        required>
-                <p class="form-hint">Separate member names by commas (e.g. Alice, Bob, Charlie, David).</p>
+                <p class="form-hint">Member names separated by commas (e.g. ilo, mahefa, tanjona, sanda).</p>
             </div>
 
             <!-- Expense List -->
             <div class="form-group">
-                <label class="form-label">Expenses List</label>
+                <label class="form-label">Expenses &amp; Service Contributions</label>
                 <div class="expense-cards-list" id="expenseCardsList">
                     <div th:each="expense, itemStat : *{expenses}" class="expense-card-item" th:id="'expense-row-' + ${itemStat.index}">
                         <div class="expense-top-row">
                             <div class="input-field-wrap">
-                                <span class="field-label">Expense Description</span>
+                                <span class="field-label">Description</span>
                                 <input type="text"
                                        th:field="*{expenses[__${itemStat.index}__].description}"
                                        class="form-input"
-                                       placeholder="e.g. Airbnb Villa, Groceries, Dinner">
+                                       placeholder="e.g. Loyer, Sakafo, Cooking, Repairs">
                             </div>
                             <div class="input-field-wrap">
-                                <span class="field-label">Amount (€)</span>
+                                <span class="field-label">Amount / Value (€)</span>
                                 <input type="number"
                                        step="0.01"
                                        min="0.01"
@@ -189,34 +220,42 @@
                                        placeholder="0.00"
                                        style="font-weight: 700;">
                             </div>
-                            <button type="button" class="btn-delete-row" title="Remove Expense" onclick="removeExpenseRow(this)">✕</button>
+                            <button type="button" class="btn-delete-row" title="Remove" onclick="removeExpenseRow(this)">✕</button>
                         </div>
-                        <div class="expense-bottom-row">
+                        <div class="expense-bottom-row" style="grid-template-columns: 1fr 1fr 1fr 1.5fr;">
                             <div class="input-field-wrap">
-                                <span class="field-label">Paid By</span>
+                                <span class="field-label">Contributor / Payer</span>
                                 <input type="text"
                                        th:field="*{expenses[__${itemStat.index}__].paidBy}"
                                        class="form-input"
-                                       placeholder="Payer Name">
+                                       placeholder="Member Name">
+                            </div>
+                            <div class="input-field-wrap">
+                                <span class="field-label">Type</span>
+                                <select th:field="*{expenses[__${itemStat.index}__].contributionType}" class="form-input">
+                                    <option value="MONETARY">💸 Cash Expense</option>
+                                    <option value="SERVICE">🛠️ Service Compensation</option>
+                                </select>
                             </div>
                             <div class="input-field-wrap">
                                 <span class="field-label">Split Method</span>
                                 <select th:field="*{expenses[__${itemStat.index}__].splitType}" class="form-input">
                                     <option value="EQUAL">EQUAL</option>
+                                    <option value="INCOME_PROPORTIONAL">INCOME PROPORTIONAL</option>
                                 </select>
                             </div>
                             <div class="input-field-wrap">
-                                <span class="field-label">Shared With <span class="text-muted">(blank = all members)</span></span>
+                                <span class="field-label">Shared With <span class="text-muted">(blank = all)</span></span>
                                 <input type="text"
                                        th:field="*{expenses[__${itemStat.index}__].sharedWithInput}"
                                        class="form-input"
-                                       placeholder="Leave blank for entire group">
+                                       placeholder="Leave blank for all">
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <button type="button" class="btn-add-dashed" onclick="addExpenseCard()">+ Add Another Expense</button>
+                <button type="button" class="btn-add-dashed" onclick="addExpenseCard()">+ Add Another Expense or Service</button>
             </div>
 
             <!-- Submit Button -->
@@ -241,29 +280,37 @@
         card.innerHTML = `
             <div class="expense-top-row">
                 <div class="input-field-wrap">
-                    <span class="field-label">Expense Description</span>
-                    <input type="text" name="expenses[${count}].description" class="form-input" placeholder="e.g. Dinner, Activity">
+                    <span class="field-label">Description</span>
+                    <input type="text" name="expenses[${count}].description" class="form-input" placeholder="e.g. Loyer, Sakafo, Cleaning">
                 </div>
                 <div class="input-field-wrap">
-                    <span class="field-label">Amount (€)</span>
+                    <span class="field-label">Amount / Value (€)</span>
                     <input type="number" step="0.01" min="0.01" name="expenses[${count}].amount" class="form-input" placeholder="0.00" style="font-weight: 700;">
                 </div>
-                <button type="button" class="btn-delete-row" title="Remove Expense" onclick="removeExpenseRow(this)">✕</button>
+                <button type="button" class="btn-delete-row" title="Remove" onclick="removeExpenseRow(this)">✕</button>
             </div>
-            <div class="expense-bottom-row">
+            <div class="expense-bottom-row" style="grid-template-columns: 1fr 1fr 1fr 1.5fr;">
                 <div class="input-field-wrap">
-                    <span class="field-label">Paid By</span>
-                    <input type="text" name="expenses[${count}].paidBy" class="form-input" placeholder="Payer Name">
+                    <span class="field-label">Contributor / Payer</span>
+                    <input type="text" name="expenses[${count}].paidBy" class="form-input" placeholder="Member Name">
+                </div>
+                <div class="input-field-wrap">
+                    <span class="field-label">Type</span>
+                    <select name="expenses[${count}].contributionType" class="form-input">
+                        <option value="MONETARY">💸 Cash Expense</option>
+                        <option value="SERVICE">🛠️ Service Compensation</option>
+                    </select>
                 </div>
                 <div class="input-field-wrap">
                     <span class="field-label">Split Method</span>
                     <select name="expenses[${count}].splitType" class="form-input">
                         <option value="EQUAL">EQUAL</option>
+                        <option value="INCOME_PROPORTIONAL">INCOME PROPORTIONAL</option>
                     </select>
                 </div>
                 <div class="input-field-wrap">
-                    <span class="field-label">Shared With <span class="text-muted">(blank = all members)</span></span>
-                    <input type="text" name="expenses[${count}].sharedWithInput" class="form-input" placeholder="Leave blank for entire group">
+                    <span class="field-label">Shared With <span class="text-muted">(blank = all)</span></span>
+                    <input type="text" name="expenses[${count}].sharedWithInput" class="form-input" placeholder="Leave blank for all">
                 </div>
             </div>
         `;

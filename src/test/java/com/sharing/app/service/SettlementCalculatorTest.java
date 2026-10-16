@@ -157,4 +157,80 @@ class SettlementCalculatorTest {
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("Dave");
   }
+
+  @Test
+  void handles_income_proportional_split() {
+    List<com.sharing.app.model.Participant> participants =
+        List.of(
+            com.sharing.app.model.Participant.of("ilo", new BigDecimal("1666")),
+            com.sharing.app.model.Participant.of("mahefa", new BigDecimal("1345")),
+            com.sharing.app.model.Participant.of("tanjona", new BigDecimal("380")),
+            com.sharing.app.model.Participant.of("sanda", new BigDecimal("200")));
+
+    // Total income = 3591. Loyer = 1400.
+    Expense loyer =
+        new Expense(
+            "1",
+            "loyer",
+            "ilo",
+            new BigDecimal("1400.00"),
+            com.sharing.app.model.ContributionType.MONETARY,
+            SplitType.INCOME_PROPORTIONAL,
+            List.of(),
+            List.of("ilo", "mahefa", "tanjona", "sanda"));
+
+    CalculationResult result = calculator.calculateWithParticipants(participants, List.of(loyer));
+
+    assertThat(result.totalExpenses()).isEqualByComparingTo("1400.00");
+    assertThat(result.totalMonetaryExpenses()).isEqualByComparingTo("1400.00");
+    assertThat(result.totalServicesValue()).isEqualByComparingTo("0.00");
+
+    // ilo paid 1400, share ~ 649.37 -> net positive
+    // others owe ilo
+    assertThat(result.settlements()).isNotEmpty();
+    assertThat(result.settlements()).allMatch(s -> s.creditor().equals("ilo"));
+  }
+
+  @Test
+  void compensates_cash_debt_with_services() {
+    List<com.sharing.app.model.Participant> participants =
+        List.of(
+            com.sharing.app.model.Participant.of("Alice"),
+            com.sharing.app.model.Participant.of("Bob"));
+
+    // Alice paid 100 EUR cash for both (Bob owes 50)
+    Expense cash =
+        new Expense(
+            "1",
+            "Hotel",
+            "Alice",
+            new BigDecimal("100.00"),
+            com.sharing.app.model.ContributionType.MONETARY,
+            SplitType.EQUAL,
+            List.of(),
+            List.of());
+
+    // Bob provided 100 EUR worth of Service (Cleaning/Repairs) for both (Alice owes Bob 50)
+    Expense service =
+        new Expense(
+            "2",
+            "Painting Service",
+            "Bob",
+            new BigDecimal("100.00"),
+            com.sharing.app.model.ContributionType.SERVICE,
+            SplitType.EQUAL,
+            List.of(),
+            List.of());
+
+    CalculationResult result =
+        calculator.calculateWithParticipants(participants, List.of(cash, service));
+
+    // Both paid/provided 100 total, fair share 100 each -> perfectly balanced, 0 settlements
+    // needed!
+    assertThat(result.totalExpenses()).isEqualByComparingTo("200.00");
+    assertThat(result.totalMonetaryExpenses()).isEqualByComparingTo("100.00");
+    assertThat(result.totalServicesValue()).isEqualByComparingTo("100.00");
+    assertThat(result.settlements()).isEmpty();
+    assertThat(result.balances()).allMatch(b -> b.isSettled());
+  }
 }
